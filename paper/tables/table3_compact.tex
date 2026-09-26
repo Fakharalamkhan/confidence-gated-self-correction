@@ -1,0 +1,24 @@
+\begin{tabular}{lcccccc}
+\toprule
+& \multicolumn{3}{c}{\textbf{GSM8K (\modelA{})}} & \multicolumn{3}{c}{\textbf{HotpotQA (\modelA{})}} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+\textbf{Method} & \textbf{Acc (\%)} & \textbf{Rev (\%)} & \textbf{$p_{\text{Never}}$} & \textbf{Acc (\%)} & \textbf{Rev (\%)} & \textbf{$p_{\text{Never}}$} \\
+\midrule
+Never & 92.5 & 0.0 & -- & 58.8 & 0.0 & -- \\
+Always & 92.2 & 100.0 & 1.00 & 55.0 & 100.0 & 0.006 \\
+Majority vote & 95.5 & 5.5 & 0.004 & 60.0 & 11.5 & 0.383 \\
+IoE & 93.0 & 1.0 & 0.500 & 57.2 & 6.5 & 0.070 \\
+\midrule
+Gate $S_{\text{verb}}$ & 92.5 & 0.0 & 1.00 & 58.8 & 0.0 & 1.00 \\
+Gate $S_{\text{verb}}$ (hindsight)$^\dagger$ & 92.5 & 0.0 & 1.00 & 58.8 & 0.0 & 1.00 \\
+Gate $S_{\text{sc10}}$ & 92.5 & 0.0 & 1.00 & 58.8 & 4.8 & 1.00 \\
+Gate $S_{\text{sc10}}$ (hindsight)$^\dagger$ & 92.5 & 0.0 & 1.00 & 59.5 & 9.0 & 0.250 \\
+Gate $S_{\text{verif}}$ & 92.5 & 0.0 & 1.00 & 58.8 & 0.0 & 1.00 \\
+Gate $S_{\text{verif}}$ (hindsight)$^\dagger$ & 92.5 & 0.0 & 1.00 & 58.8 & 0.0 & 1.00 \\
+Gate $S_{\text{avg}}$ & 92.5 & 0.0 & 1.00 & 58.8 & 2.2 & 1.00 \\
+Gate $S_{\text{avg}}$ (hindsight)$^\dagger$ & 92.5 & 0.0 & 1.00 & 59.5 & 10.5 & 0.250 \\
+\midrule
+Oracle & 92.5 & 7.5 & 1.00 & 60.2 & 41.2 & 0.031 \\
+\bottomrule
+\multicolumn{7}{l}{\footnotesize $^\dagger$Oracle-tuned upper bound on test set (not a practical method).}\\
+\end{tabular}

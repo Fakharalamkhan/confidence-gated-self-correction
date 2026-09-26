@@ -1,0 +1,22 @@
+\begin{tabular}{lccccccccc}
+\toprule
+Method & $\tau^*$ & Acc (\%) & Rev (\%) & $W\to R$ & $R\to W$ & Prompt Tok & Comp Tok & $p_{\text{Never}}$ & $p_{\text{Always}}$ \\
+\midrule
+Never & -- & 92.5 & 0.0 & 0 & 0 & 121 & 232 & -- & 1.00 \\
+Always & -- & 92.2 & 100.0 & 0 & 1 & 528 & 479 & 1.00 & -- \\
+Majority vote & -- & 95.5 & 5.5 & 14 & 2 & 1326 & 2570 & 0.004 & 0.002 \\
+IoE & -- & 93.0 & 1.0 & 2 & 0 & 519 & 297 & 0.500 & 0.250 \\
+\midrule
+Gate $S_{\text{verb}}$ & 0.000 & 92.5 & 0.0 & 0 & 0 & 512 & 236 & 1.00 & 1.00 \\
+Gate $S_{\text{verb}}$ (hindsight)$^\dagger$ & 0.000 & 92.5 & 0.0 & 0 & 0 & 512 & 236 & 1.00 & 1.00 \\
+Gate $S_{\text{sc10}}$ & 0.000 & 92.5 & 0.0 & 0 & 0 & 1326 & 2570 & 1.00 & 1.00 \\
+Gate $S_{\text{sc10}}$ (hindsight)$^\dagger$ & 0.000 & 92.5 & 0.0 & 0 & 0 & 1326 & 2570 & 1.00 & 1.00 \\
+Gate $S_{\text{verif}}$ & 0.000 & 92.5 & 0.0 & 0 & 0 & 248 & 233 & 1.00 & 1.00 \\
+Gate $S_{\text{verif}}$ (hindsight)$^\dagger$ & 0.000 & 92.5 & 0.0 & 0 & 0 & 248 & 233 & 1.00 & 1.00 \\
+Gate $S_{\text{avg}}$ & 0.000 & 92.5 & 0.0 & 0 & 0 & 1717 & 2574 & 1.00 & 1.00 \\
+Gate $S_{\text{avg}}$ (hindsight)$^\dagger$ & 0.000 & 92.5 & 0.0 & 0 & 0 & 1717 & 2574 & 1.00 & 1.00 \\
+\midrule
+Oracle & -- & 92.5 & 7.5 & 0 & 0 & 160 & 259 & 1.00 & 1.00 \\
+\bottomrule
+\multicolumn{10}{l}{\footnotesize $^\dagger$Oracle-tuned upper bound on test set (not a practical method).}\\
+\end{tabular}

@@ -1,0 +1,14 @@
+\section{Limitations}
+\label{sec:limitations}
+
+Our study has several limitations that bound how far its conclusions reach.
+\begin{itemize}
+    \item \textbf{Models.} We study a single open instruction-tuned model with 7B parameters, so our conclusions may not transfer to other model families or sizes. Larger models are reported to judge their own answers more reliably~\cite{kadavath2022language} and may have different fix and break rates, so the ranking of signals could change with scale. The model was run in 16-bit floating point on T4 GPUs; small numerical differences from other hardware or precisions are possible.
+    \item \textbf{Tasks.} Both tasks are in English and have short answers that can be checked automatically. Open-ended generation, where correctness needs a semantic judgement, is outside our scope.
+    \item \textbf{Sample size.} Each dataset contributes a few hundred test questions. This is enough to compare methods with paired tests, but confidence intervals are wide, and small accuracy differences between gates should not be over-interpreted.
+    \item \textbf{Prompts.} We use one critique-and-revise prompt and a single round of revision. Fix and break rates depend on the wording of the revision prompt~\cite{yang2024confidence}, so other prompts or multi-round revision could shift the results.
+    \item \textbf{Labels.} Exact match can mark a correct but differently phrased answer as wrong. This adds noise to the correctness labels, to the transition counts and to AUROC. We quantify the effect with a lenient match on HotpotQA, but do not remove it.
+    \item \textbf{Analytical model.} The model in Section~\ref{sec:theory} assumes that the outcome of revision is independent of the confidence score once correctness is known. Section~\ref{sec:assumption} tests how well this holds; where it fails, the model's predictions are only approximate.
+    \item \textbf{Threshold selection.} The development split is small compared with the number of candidate thresholds, so the chosen threshold $\tau^*$ has sampling variance and may not be optimal on the test split.
+    \item \textbf{Cost.} Token counts are a proxy for cost. Wall-clock time depends on hardware, batching and prefix caching, which can make repeated prefill much cheaper than our token counts suggest.
+\end{itemize}

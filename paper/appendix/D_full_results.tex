@@ -1,0 +1,51 @@
+\section{Complete Numerical Results across All Experimental Settings}
+\label{app:full}
+\label{app:full_results}
+
+This appendix provides the complete tabular breakdown of accuracy, revision rates, transition frequencies ($W\to R$ and $R\to W$), token costs, and exact McNemar significance tests across all evaluated methods and confidence gates for \modelA{} on GSM8K and HotpotQA, as well as the analytical model verification, score distributions, and threshold sensitivity curves.
+
+\subsection{Full Gating Results on GSM8K}
+\label{app:tab_qwen_gsm8k}
+\begin{table}[H]
+\centering
+\caption{Full gating results for \modelA{} on GSM8K ($N=400$ test questions).}
+\label{tab:full_qwen_gsm8k}
+\resizebox{\linewidth}{!}{\input{tables/table3_gated_qwen_gsm8k}}
+\end{table}
+
+\subsection{Full Gating Results on HotpotQA}
+\label{app:tab_qwen_hotpotqa}
+\begin{table}[H]
+\centering
+\caption{Full gating results for \modelA{} on HotpotQA ($N=400$ test questions).}
+\label{tab:full_qwen_hotpotqa}
+\resizebox{\linewidth}{!}{\input{tables/table3_gated_qwen_hotpotqa}}
+\end{table}
+
+\subsection{Analytical Model Verification}
+\label{app:analytical_model}
+\begin{table}[H]
+\centering
+\caption{Comparison of predicted gated accuracy from the analytical model (Eq.~\ref{eq:gated}) against empirically observed gated accuracy on the test set ($N=400$ per dataset).}
+\label{tab:model_check}
+\resizebox{\linewidth}{!}{\input{tables/table5_analytical_model}}
+\end{table}
+
+\subsection{Score Distributions and Threshold Sensitivity}
+\label{app:distributions_and_sensitivity}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\linewidth]{figure2_histograms.pdf}
+\caption{Distributions of confidence scores for correct ($Y_0=1$) versus incorrect ($Y_0=0$) initial answers across signals on GSM8K (left) and HotpotQA (right) for \modelA{}. Diamonds indicate the dev-selected threshold $\tau^*$.}
+\label{fig:hist}
+\label{fig:histograms}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\linewidth]{figure3_tau_sensitivity.pdf}
+\caption{Sensitivity of test accuracy to revision threshold $\tau$ for each confidence signal on GSM8K (left) and HotpotQA (right). Markers indicate operating points at the dev-selected threshold $\tau^*$.}
+\label{fig:tau}
+\label{fig:tau_sensitivity}
+\end{figure}
