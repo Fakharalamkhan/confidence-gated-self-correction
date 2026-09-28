@@ -2,7 +2,7 @@
 \label{app:prompts}
 All prompts are given verbatim; \{...\} marks a placeholder filled per question. Each prompt is sent as a user turn with the model's own chat template.
 
-\paragraph{A0 GSM8K}
+\paragraph{A0 GSM8K}\mbox{}\par\nopagebreak
 \begin{lstlisting}
 Solve the following problem step by step. At the end, write your answer on a new line as:
 Final answer: <answer>
@@ -10,7 +10,7 @@ Final answer: <answer>
 Problem: {question}
 \end{lstlisting}
 
-\paragraph{A0 HotpotQA}
+\paragraph{A0 HotpotQA}\mbox{}\par\nopagebreak
 \begin{lstlisting}
 Answer the question using the paragraphs below. Think step by step. At the end, write your answer on a new line as:
 Final answer: <answer>
@@ -22,12 +22,12 @@ Paragraphs:
 Question: {question}
 \end{lstlisting}
 
-\paragraph{Verbalized confidence}
+\paragraph{Verbalized confidence}\mbox{}\par\nopagebreak
 \begin{lstlisting}
 How confident are you that your final answer above is correct? Reply with a single integer from 0 to 100 and nothing else.
 \end{lstlisting}
 
-\paragraph{Self-verification P(True)}
+\paragraph{Self-verification P(True)}\mbox{}\par\nopagebreak
 \begin{lstlisting}
 Question: {question}
 Proposed answer: {extracted_A0_answer}
@@ -38,12 +38,12 @@ Answer with the letter only.
 \end{lstlisting}
 The assistant turn is prefilled with ``The proposed answer is: ('' and the next-token probabilities of ``A'' and ``B'' are read.
 
-\paragraph{Revision}
+\paragraph{Revision}\mbox{}\par\nopagebreak
 \begin{lstlisting}
 Review your previous answer carefully. Check each step for errors. If you find a specific error, correct it. If you find no error, keep your original answer. End with a new line: Final answer: <answer>
 \end{lstlisting}
 
-\paragraph{IoE}
+\paragraph{IoE}\mbox{}\par\nopagebreak
 \begin{lstlisting}
 Review your previous answer. If you are very confident about your answer, maintain your answer. Otherwise, update your answer. End with a new line: Final answer: <answer>
 \end{lstlisting}

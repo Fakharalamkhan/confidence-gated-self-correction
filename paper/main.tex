@@ -12,7 +12,7 @@
 \usepackage{xcolor}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.16}
-\usepackage{cite}
+\usepackage[numbers,sort&compress]{natbib}
 \usepackage{url}
 \usepackage{listings}
 \lstset{%
@@ -38,7 +38,6 @@
 
 \newcommand{\modelA}{Qwen2.5-7B-Instruct}
 \newcommand{\repourl}{https://github.com/Fakharalamkhan/confidence-gated-self-correction}
-\newcommand{\todo}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
 \newtheorem{proposition}{Proposition}
 
 \title{Knowing When to Revise: Confidence-Gated Self-Correction in Large Language Models}
@@ -64,7 +63,7 @@
 \input{sections/07_discussion}
 \input{sections/08_limitations}
 \input{sections/09_conclusion}
-\bibliographystyle{unsrt}
+\bibliographystyle{unsrtnat}
 \bibliography{references}
 \appendix
 \input{appendix/A_prompts}

@@ -1,7 +1,7 @@
 \section{An Analytical Model of Confidence-Gated Revision}
 \label{sec:theory}
 
-Before running any experiment, it helps to ask what a confidence gate can and cannot achieve. This section gives a small model that answers this question with a few quantities that can all be measured on real data.
+Before running any experiment, it helps to ask what a confidence gate can and cannot achieve. The small model in this section answers the question with a few quantities that can all be measured on real data.
 
 \paragraph{Setup.} Consider one question. Let $Y_0\in\{0,1\}$ indicate whether the initial answer $A_0$ is correct, let $Y_1\in\{0,1\}$ indicate whether the revised answer $A_1$ is correct, and let $S$ be a confidence score computed from $A_0$. We describe the revision step by three numbers:
 \begin{align*}
@@ -13,7 +13,7 @@ A gate with threshold $\tau$ revises when $S<\tau$. Since the gate should catch 
 
 \paragraph{Assumption.} We assume that, once we know whether $A_0$ is correct, the outcome of the revision does not depend on the confidence score: $Y_1 \perp S \mid Y_0$. This is a simplification. A model that is unsure about an answer may also be worse at fixing it, which would make the fix rate lower among low-confidence answers. We test how much this matters in Section~\ref{sec:assumption}.
 
-\paragraph{Gated accuracy.} Under this assumption, a correct answer is lost only if the gate sends it to revision and the revision breaks it, and a wrong answer is recovered only if the gate sends it to revision and the revision fixes it. The accuracy of the gated system is therefore
+\paragraph{Gated accuracy.} Under this assumption, a correct answer is lost only if the gate sends it to revision and the revision breaks it, and a wrong answer is recovered only if the gate sends it to revision and the revision fixes it. The accuracy of the gated system is then
 \begin{equation}
 \mathrm{Acc}(\tau) \;=\; a \;+\; (1-a)\,f\,t(\tau) \;-\; a\,b\,u(\tau).
 \label{eq:gated}
@@ -34,19 +34,19 @@ and beats always revising if and only if
 \frac{1-u}{1-t} \;>\; \frac{1}{\kappa}.
 \label{eq:beat_always}
 \end{equation}
-In words: to beat never revising, the gate must send wrong answers to revision at least $\kappa$ times as often as right ones; to beat always revising, it must hold back right answers at least $1/\kappa$ times as often as wrong ones.
+So, to beat never revising, the gate must send wrong answers to revision at least $\kappa$ times as often as right ones. To beat always revising, it must hold back right answers at least $1/\kappa$ times as often as wrong ones.
 
 \begin{proposition}[No free gating]
 \label{prop:nofree}
-If the confidence signal is uninformative, i.e.\ $t(\tau)=u(\tau)$ for every $\tau$, then for every threshold the gated accuracy lies between the accuracies of never and always revising. An uninformative gate can therefore never beat the better of the two baselines.
+If the confidence signal is uninformative, i.e.\ $t(\tau)=u(\tau)$ for every $\tau$, then for every threshold the gated accuracy lies between the accuracies of never and always revising. As a consequence, an uninformative gate can never beat the better of the two baselines.
 \end{proposition}
-\noindent\emph{Proof.} Setting $t=u=q$ in Eq.~\eqref{eq:gated} gives $\mathrm{Acc}=a+q\,[(1-a)f-ab]$. This is linear in $q\in[0,1]$, equals the never-revise accuracy at $q=0$ and the always-revise accuracy at $q=1$, and so never leaves the interval between them. $\square$
+\noindent\textit{Proof.} Setting $t=u=q$ in Eq.~\eqref{eq:gated} gives $\mathrm{Acc}=a+q\,[(1-a)f-ab]$. This is linear in $q\in[0,1]$, equals the never-revise accuracy at $q=0$ and the always-revise accuracy at $q=1$, and so never leaves the interval between them. $\square$
 
-\paragraph{The optimal threshold.} Eq.~\eqref{eq:gated} is linear in $(u,t)$, so lines of equal accuracy are straight lines of slope $\kappa$ in ROC space. The best threshold is therefore the point at which the ROC curve has slope $\kappa$, the same result as in cost-sensitive ROC analysis~\cite{fawcett2006roc}. When revision is harmful on average ($\kappa>1$), this point lies close to the origin: the gate should revise only a small set of answers for which the signal is quite sure that $A_0$ is wrong.
+\paragraph{The optimal threshold.} Eq.~\eqref{eq:gated} is linear in $(u,t)$, so lines of equal accuracy are straight lines of slope $\kappa$ in ROC space. The best threshold is the point at which the ROC curve has slope $\kappa$, the same result as in cost-sensitive ROC analysis~\cite{fawcett2006roc}. When revision is harmful on average ($\kappa>1$), this point lies close to the origin: the gate should revise only a small set of answers for which the signal is quite sure that $A_0$ is wrong.
 
-\paragraph{A ceiling on the gain.} Because $t\le 1$ and $u\ge 0$, the gain of any gate over never revising is at most $(1-a)f$, which is exactly the gain of the oracle gate. If the revision step rarely fixes errors, even a perfect signal can deliver only a small improvement. Put simply, \emph{a gate can remove harm, but it cannot create fixes}.
+\paragraph{A ceiling on the gain.} Because $t\le 1$ and $u\ge 0$, the gain of any gate over never revising is at most $(1-a)f$, which is exactly the gain of the oracle gate. If the revision step rarely fixes errors, even a perfect signal can deliver only a small improvement. A gate can remove harm, but it cannot create fixes.
 
-\paragraph{Why AUROC is not enough.} AUROC summarises the whole ROC curve, but by Eq.~\eqref{eq:gated} only the part of the curve near slope $\kappa$ determines the gain. Two signals with the same AUROC can thus give different gains, and a signal with a high AUROC gives little benefit when the fix rate $f$ is small. For this reason we report both the AUROC of each signal and the accuracy gain it actually achieves.
+\paragraph{Why AUROC is not enough.} AUROC summarises the whole ROC curve, but by Eq.~\eqref{eq:gated} only the part of the curve near slope $\kappa$ determines the gain. As a result, two signals with the same AUROC can give different gains, and a signal with a high AUROC gives little benefit when the fix rate $f$ is small. For this reason we report both the AUROC of each signal and the accuracy gain it actually achieves.
 
 \paragraph{Illustration.} Figure~\ref{fig:theory} evaluates Eq.~\eqref{eq:gated} for hypothetical values $a=0.80$, $b=0.15$ and $f=0.30$. Here $\kappa=2$, so always revising costs 6 points, and the oracle ceiling is $(1-a)f=6$ points. We model the signal with equal-variance binormal ROC curves of separation $d'$. An uninformative signal ($d'=0$) only moves along the straight line between the two baselines, as Proposition~\ref{prop:nofree} states. A signal with AUROC $0.76$ ($d'=1$) gains at most about 1.1 points, one with AUROC $0.92$ ($d'=2$) about 3.4 points, and one with AUROC $0.98$ ($d'=3$) about 4.9 points, still below the ceiling. In every case the best operating point revises fewer than 12\% of the correct answers.
 

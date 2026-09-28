@@ -20,7 +20,7 @@ def main():
         (
             "Self-verification P(True)",
             os.path.join(prompts_dir, "verif_gsm8k.txt"),
-            'The assistant turn is prefilled with "The proposed answer is: (" and the next-token probabilities of "A" and "B" are read.'
+            "The assistant turn is prefilled with ``The proposed answer is: ('' and the next-token probabilities of ``A'' and ``B'' are read."
         ),
         ("Revision", os.path.join(prompts_dir, "revision.txt"), None),
         (
@@ -41,7 +41,8 @@ def main():
         with open(filepath, "r", encoding="utf-8") as f:
             raw = f.read()
         cleaned = clean_prompt(raw)
-        out_lines.append(f"\\paragraph{{{title}}}")
+        # \paragraph is a run-in heading; end its line so the framed listing starts on its own line
+        out_lines.append(f"\\paragraph{{{title}}}\\mbox{{}}\\par\\nopagebreak")
         out_lines.append(r"\begin{lstlisting}")
         out_lines.append(cleaned)
         out_lines.append(r"\end{lstlisting}")

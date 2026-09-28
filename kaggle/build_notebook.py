@@ -48,10 +48,8 @@ def make_notebook(output_path: str = "kaggle/cgsc_run.ipynb"):
     # Cell 0: Parameters
     c0 = """# PARAMETERS CELL
 SETTINGS = [
-    "qwen/gsm8k:resample",
-    "qwen/hotpotqa:resample",
-    "llama/gsm8k",
-    "llama/hotpotqa",
+    "qwen/gsm8k",
+    "qwen/hotpotqa",
 ]
 
 DRY_RUN_COUNT = 20

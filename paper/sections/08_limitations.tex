@@ -1,7 +1,7 @@
 \section{Limitations}
 \label{sec:limitations}
 
-Our study has several limitations that bound how far its conclusions reach.
+The study has several limitations that bound how far its conclusions reach.
 \begin{itemize}
     \item \textbf{Models.} We study a single open instruction-tuned model with 7B parameters, so our conclusions may not transfer to other model families or sizes. Larger models are reported to judge their own answers more reliably~\cite{kadavath2022language} and may have different fix and break rates, so the ranking of signals could change with scale. The model was run in 16-bit floating point on T4 GPUs; small numerical differences from other hardware or precisions are possible.
     \item \textbf{Tasks.} Both tasks are in English and have short answers that can be checked automatically. Open-ended generation, where correctness needs a semantic judgement, is outside our scope.

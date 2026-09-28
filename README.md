@@ -16,14 +16,19 @@ This repository contains the complete experimental code, raw pipeline outputs, e
   - **GSM8K** (`main`, test set split): 500 questions (100 dev / 400 test, seed 42).
   - **HotpotQA** (`distractor`, validation set split): 500 questions (100 dev / 400 test, seed 42).
 
+Llama-3.1-8B-Instruct was planned but not run; its code paths remain but are unused.
+
 ## Reproduction
 
+**How the reported results were produced.** The results in `results/raw/` came from two runs. The first run executed the full pipeline, but a seeding bug made all ten self-consistency samples identical. We then re-ran only the self-consistency samples on top of the first run's outputs (`python cgsc/run.py ... --resample_sc_only`), which recomputes $S_{\text{sc5}}$, $S_{\text{sc10}}$ and majority voting; everything else ($A_0$, $S_{\text{verb}}$, $S_{\text{verif}}$, $A_1$, IoE) comes from the first run. With the fixed code, running the notebook with its default settings reproduces all results in a single pass.
+
 1. **Inference Pipeline**:
-   - Run `kaggle/cgsc_run.ipynb` on a Kaggle notebook equipped with 2x NVIDIA T4 GPUs (or any dual-GPU environment).
-   - The notebook installs `vllm==0.6.6.post1`, runs the initial answer generation ($A_0$), the three confidence signals ($S_{\text{verb}}$, $S_{\text{sc10}}$, $S_{\text{verif}}$), revision ($A_1$), IoE baseline, and majority voting.
+   - Run `kaggle/cgsc_run.ipynb` on a Kaggle notebook with 2x NVIDIA T4 GPUs and internet access. The default settings (`SETTINGS = ["qwen/gsm8k", "qwen/hotpotqa"]`) run the full pipeline for both datasets.
+   - The notebook installs `vllm==0.6.6.post1`, runs the initial answer generation ($A_0$), the three confidence signals ($S_{\text{verb}}$, $S_{\text{sc10}}$, $S_{\text{verif}}$), revision ($A_1$), IoE baseline, and majority voting, and writes `qwen_gsm8k.jsonl` and `qwen_hotpotqa.jsonl`. Copy them to `results/raw/`.
+   - The notebook is generated from `kaggle/build_notebook.py` (`python kaggle/build_notebook.py`).
 
 2. **Analysis and Table Generation**:
-   - Compute all metrics, transition matrices, bootstrap AUROCs, cost models, and LaTeX tables:
+   - Compute all metrics, transition matrices, bootstrap AUROCs, cost models, LaTeX tables and figures from `results/raw/`:
      ```bash
      python cgsc/analyze.py
      ```

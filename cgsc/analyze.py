@@ -6,6 +6,7 @@ import json
 import numpy as np
 import pandas as pd
 from typing import Dict, List, Any, Tuple
+from decimal import Decimal, ROUND_HALF_UP
 from scipy.stats import binomtest
 import matplotlib
 matplotlib.use("Agg")
@@ -29,10 +30,27 @@ CB_COLORS = {
     "Oracle": "#17becf"
 }
 
+# Figures are drawn at the size they are printed in the paper, so font sizes are true point sizes (>= 9 pt)
+FIG_WIDTH_IN = {"figure1": 6.5, "appendix": 5.65}  # \linewidth and 0.9\linewidth (5.85 in) of the 6.5 in text block, minus bbox slack
+plt.rcParams.update({
+    "font.size": 9,
+    "axes.titlesize": 9.5,
+    "axes.labelsize": 9,
+    "xtick.labelsize": 9,
+    "ytick.labelsize": 9,
+    "legend.fontsize": 9,
+})
+
 DATASET_DISPLAY = {
     "gsm8k": "GSM8K",
     "hotpotqa": "HotpotQA"
 }
+
+
+def fmt_pct(x: float, nd: int = 1, sign: bool = False) -> str:
+    """Format a percentage with half-up rounding (not Python's round-half-to-even)."""
+    d = Decimal(repr(round(float(x), 10))).quantize(Decimal(1).scaleb(-nd), rounding=ROUND_HALF_UP)
+    return f"{d:+f}" if sign else f"{d:f}"
 
 
 def display_dataset(dataset_key: str) -> str:
@@ -115,7 +133,7 @@ def generate_combined_figure1(completed_runs: List[Dict[str, Any]], output_dirs:
     nrows = len(models)
     ncols = len(datasets)
     
-    fig, axes = plt.subplots(nrows, ncols, figsize=(6.5 * ncols, 5.0 * nrows), squeeze=False)
+    fig, axes = plt.subplots(nrows, ncols, figsize=(FIG_WIDTH_IN["figure1"], 2.7 * nrows), squeeze=False)
     
     marker_map = {
         "Never": ("s", 75),
@@ -129,16 +147,11 @@ def generate_combined_figure1(completed_runs: List[Dict[str, Any]], output_dirs:
         "Oracle": ("h", 95)
     }
 
-    offsets = {
-        "Never": (5, 5),
-        "Always": (5, -12),
-        "Majority vote": (5, 5),
-        "IoE": (5, -12),
-        "Gate verb": (5, 5),
-        "Gate sc10": (5, 5),
-        "Gate verif": (5, -12),
-        "Gate avg": (5, 8),
-        "Oracle": (5, -12)
+    legend_labels = {
+        "Gate verb": r"Gate $S_{\mathrm{verb}}$",
+        "Gate sc10": r"Gate $S_{\mathrm{sc10}}$",
+        "Gate verif": r"Gate $S_{\mathrm{verif}}$",
+        "Gate avg": r"Gate $S_{\mathrm{avg}}$",
     }
 
     run_dict = {(r["model_key"], r["dataset_key"]): r for r in completed_runs}
@@ -164,27 +177,29 @@ def generate_combined_figure1(completed_runs: List[Dict[str, Any]], output_dirs:
                 
                 color = CB_COLORS.get(m_name, "#333333")
                 marker, size = marker_map.get(m_name, ("o", 70))
-                ax.scatter(mean_tokens, acc_pct, color=color, marker=marker, s=size, zorder=5, edgecolors='black', linewidths=0.5)
+                ax.scatter(mean_tokens, acc_pct, color=color, marker=marker, s=size * 0.55, zorder=5,
+                           edgecolors='black', linewidths=0.5, label=legend_labels.get(m_name, m_name))
 
             never_acc = float(np.mean(methods["Never"]["y"]) * 100)
             oracle_acc = float(np.mean(methods["Oracle"]["y"]) * 100)
-            ax.axhline(never_acc, color=CB_COLORS["Never"], linestyle="--", alpha=0.45, label="Never")
-            ax.axhline(oracle_acc, color=CB_COLORS["Oracle"], linestyle=":", alpha=0.45, label="Oracle")
+            ax.axhline(never_acc, color=CB_COLORS["Never"], linestyle="--", alpha=0.45)
+            ax.axhline(oracle_acc, color=CB_COLORS["Oracle"], linestyle=":", alpha=0.45)
 
-            for m_name, x, y in zip(names, x_vals, y_vals):
-                dx, dy = offsets.get(m_name, (5, 5))
-                ax.annotate(m_name, (x, y), xytext=(dx, dy), textcoords="offset points", fontsize=8)
-
-            ax.set_xlabel("Mean Total Tokens per Question", fontsize=10.5)
-            ax.set_ylabel("Test Accuracy (%)", fontsize=10.5)
-            ax.set_title(f"{run_data['model_alias']} on {d_key.upper()}", fontsize=11.5, fontweight="bold")
+            ax.set_xlabel("Mean Total Tokens per Question")
+            ax.set_ylabel("Test Accuracy (%)")
+            ax.set_title(f"{run_data['model_alias']} on {display_dataset(d_key)}", fontweight="bold")
             ax.grid(True, linestyle="--", alpha=0.4)
 
-    plt.tight_layout()
+    # One shared legend with distinct markers instead of point labels (avoids overlapping text)
+    handles, labels = axes[0, 0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="lower center", ncol=5, frameon=False,
+               handletextpad=0.3, columnspacing=1.0, bbox_to_anchor=(0.5, -0.01))
+    plt.tight_layout(rect=(0, 0.13, 1, 1))
     for out_dir in output_dirs:
         os.makedirs(out_dir, exist_ok=True)
         fig.savefig(os.path.join(out_dir, "figure1_accuracy_cost.pdf"), bbox_inches="tight")
-        fig.savefig(os.path.join(out_dir, "figure1_accuracy_cost.png"), dpi=300, bbox_inches="tight")
+        if os.path.basename(out_dir) != "images":  # the paper only includes the PDFs
+            fig.savefig(os.path.join(out_dir, "figure1_accuracy_cost.png"), dpi=300, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -196,7 +211,7 @@ def generate_combined_figure2(completed_runs: List[Dict[str, Any]], output_dirs:
     nrows = len(models)
     ncols = len(datasets)
     
-    fig, axes = plt.subplots(nrows, ncols, figsize=(6.5 * ncols, 5.0 * nrows), squeeze=False)
+    fig, axes = plt.subplots(nrows, ncols, figsize=(FIG_WIDTH_IN["appendix"], 2.9 * nrows), squeeze=False)
     run_dict = {(r["model_key"], r["dataset_key"]): r for r in completed_runs}
 
     for row_idx, m_key in enumerate(models):
@@ -231,25 +246,28 @@ def generate_combined_figure2(completed_runs: List[Dict[str, Any]], output_dirs:
 
             # Plot tau* as diamond markers
             tau_points = [tau_stars.get(s, 0.0) for s in sig_names]
-            ax.scatter(positions, tau_points, color="black", marker="D", s=45, zorder=6, label=r"Dev threshold $\tau^*$")
+            ax.scatter(positions, tau_points, color="black", marker="D", s=20, zorder=6, label=r"Dev threshold $\tau^*$")
 
             ax.set_xticks(positions)
-            ax.set_xticklabels([f"{l}\n(AUROC {aurocs.get(s, 0.5):.3f})" for l, s in zip(sig_labels, sig_names)], fontsize=9)
-            ax.set_ylabel("Confidence Score", fontsize=10.5)
+            ax.set_xticklabels([f"{l}\n({aurocs.get(s, 0.5):.3f})" for l, s in zip(sig_labels, sig_names)])
+            ax.set_xlabel("Signal (AUROC)")
+            ax.set_ylabel("Confidence Score")
             ax.set_ylim(-0.05, 1.05)
-            ax.set_title(f"{run_data['model_alias']} on {d_key.upper()}", fontsize=11.5, fontweight="bold")
+            ax.set_title(f"{run_data['model_alias']} on {display_dataset(d_key)}", fontweight="bold")
             ax.grid(True, linestyle="--", alpha=0.4)
 
             if row_idx == 0 and col_idx == 0:
-                ax.legend([bp_c["boxes"][0], bp_w["boxes"][0], ax.collections[-1]],
-                          [f"Correct ($Y_0=1$)", f"Incorrect ($Y_0=0$)", r"$\tau^*$"],
-                          loc="lower left", fontsize=8.5)
+                legend_items = ([bp_c["boxes"][0], bp_w["boxes"][0], ax.collections[-1]],
+                                [f"Correct ($Y_0=1$)", f"Incorrect ($Y_0=0$)", r"Dev threshold $\tau^*$"])
 
-    plt.tight_layout()
+    # Shared legend below the panels so it does not cover the boxes
+    fig.legend(*legend_items, loc="lower center", ncol=3, frameon=False, bbox_to_anchor=(0.5, -0.01))
+    plt.tight_layout(rect=(0, 0.08, 1, 1))
     for out_dir in output_dirs:
         os.makedirs(out_dir, exist_ok=True)
         fig.savefig(os.path.join(out_dir, "figure2_histograms.pdf"), bbox_inches="tight")
-        fig.savefig(os.path.join(out_dir, "figure2_histograms.png"), dpi=300, bbox_inches="tight")
+        if os.path.basename(out_dir) != "images":  # the paper only includes the PDFs
+            fig.savefig(os.path.join(out_dir, "figure2_histograms.png"), dpi=300, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -261,7 +279,7 @@ def generate_combined_figure3(completed_runs: List[Dict[str, Any]], output_dirs:
     nrows = len(models)
     ncols = len(datasets)
     
-    fig, axes = plt.subplots(nrows, ncols, figsize=(6.5 * ncols, 5.0 * nrows), squeeze=False)
+    fig, axes = plt.subplots(nrows, ncols, figsize=(FIG_WIDTH_IN["appendix"], 2.9 * nrows), squeeze=False)
     run_dict = {(r["model_key"], r["dataset_key"]): r for r in completed_runs}
 
     sig_configs = [
@@ -298,27 +316,28 @@ def generate_combined_figure3(completed_runs: List[Dict[str, Any]], output_dirs:
                     yg = np.where(rev, y1, y0)
                     accs.append(float(np.mean(yg) * 100))
 
-                ax.plot(taus, accs, label=sig_label, color=color, linewidth=1.8)
+                ax.plot(taus, accs, label=sig_label, color=color, linewidth=1.2)
 
                 tau_s = tau_stars.get(sig_name, 0.0)
                 acc_s = float(np.mean(np.where(scores < tau_s, y1, y0)) * 100)
-                ax.scatter([tau_s], [acc_s], color=color, s=70, zorder=5, edgecolors='black', linewidths=0.5)
+                ax.scatter([tau_s], [acc_s], color=color, s=28, zorder=5, edgecolors='black', linewidths=0.5)
 
-            ax.axhline(never_acc, color=CB_COLORS["Never"], linestyle="--", linewidth=1.2, label=f"Never ({never_acc:.1f}%)")
-            ax.axhline(always_acc, color=CB_COLORS["Always"], linestyle=":", linewidth=1.2, label=f"Always ({always_acc:.1f}%)")
+            ax.axhline(never_acc, color=CB_COLORS["Never"], linestyle="--", linewidth=1.2, label=f"Never ({fmt_pct(never_acc)}%)")
+            ax.axhline(always_acc, color=CB_COLORS["Always"], linestyle=":", linewidth=1.2, label=f"Always ({fmt_pct(always_acc)}%)")
 
-            ax.set_xlabel(r"Revision Threshold $\tau$", fontsize=10.5)
-            ax.set_ylabel("Test Accuracy (%)", fontsize=10.5)
-            ax.set_title(f"{run_data['model_alias']} on {d_key.upper()}", fontsize=11.5, fontweight="bold")
+            ax.set_xlabel(r"Revision Threshold $\tau$")
+            ax.set_ylabel("Test Accuracy (%)")
+            ax.set_title(f"{run_data['model_alias']} on {display_dataset(d_key)}", fontweight="bold")
             ax.grid(True, linestyle="--", alpha=0.4)
             if row_idx == 0 and col_idx == 0:
-                ax.legend(loc="best", fontsize=8.5, frameon=True)
+                ax.legend(loc="center right", fontsize=9, frameon=True, borderpad=0.3, handlelength=1.5)
 
     plt.tight_layout()
     for out_dir in output_dirs:
         os.makedirs(out_dir, exist_ok=True)
         fig.savefig(os.path.join(out_dir, "figure3_tau_sensitivity.pdf"), bbox_inches="tight")
-        fig.savefig(os.path.join(out_dir, "figure3_tau_sensitivity.png"), dpi=300, bbox_inches="tight")
+        if os.path.basename(out_dir) != "images":  # the paper only includes the PDFs
+            fig.savefig(os.path.join(out_dir, "figure3_tau_sensitivity.png"), dpi=300, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -460,12 +479,12 @@ def analyze_all(raw_data_dir: str = "results/raw",
             "Model": latex_macro,
             "Dataset": display_dataset(dataset_key),
             "N": n_test,
-            "Acc_A0": f"{acc_a0*100:.1f}",
-            "W->R": f"{wr_count} ({wr_count/n_test*100:.1f}%)",
-            "R->W": f"{rw_count} ({rw_count/n_test*100:.1f}%)",
-            "R->R": f"{rr_count} ({rr_count/n_test*100:.1f}%)",
-            "W->W": f"{ww_count} ({ww_count/n_test*100:.1f}%)",
-            "Delta": f"{delta_always*100:+.1f}",
+            "Acc_A0": fmt_pct(acc_a0*100),
+            "W->R": f"{wr_count} ({fmt_pct(wr_count/n_test*100)}%)",
+            "R->W": f"{rw_count} ({fmt_pct(rw_count/n_test*100)}%)",
+            "R->R": f"{rr_count} ({fmt_pct(rr_count/n_test*100)}%)",
+            "W->W": f"{ww_count} ({fmt_pct(ww_count/n_test*100)}%)",
+            "Delta": fmt_pct(delta_always*100, sign=True),
             "f": f"{f_rate:.3f}",
             "b": f"{b_rate:.3f}",
             "a": f"{a_param:.3f}",
@@ -514,9 +533,9 @@ def analyze_all(raw_data_dir: str = "results/raw",
                 "tau*": f"{tau_star:.3f}",
                 "TPR (t)": f"{tpr_t:.3f}",
                 "FPR (u)": f"{fpr_u:.3f}",
-                "Pred Acc (%)": f"{pred_acc*100:.2f}",
-                "Obs Acc (%)": f"{obs_acc*100:.2f}",
-                "Diff (%)": f"{error*100:+.2f}"
+                "Pred Acc (%)": fmt_pct(pred_acc*100, 2),
+                "Obs Acc (%)": fmt_pct(obs_acc*100, 2),
+                "Diff (%)": fmt_pct(error*100, 2, sign=True)
             })
 
         # Methods evaluation
@@ -643,8 +662,8 @@ def analyze_all(raw_data_dir: str = "results/raw",
             t3_rows.append({
                 "Method": m_name,
                 "tau*": m_data["tau"],
-                "Acc": f"{acc*100:.1f}",
-                "% revised": f"{pct_rev:.1f}",
+                "Acc": fmt_pct(acc*100),
+                "% revised": fmt_pct(pct_rev),
                 "W->R": wr,
                 "R->W": rw,
                 "Mean Prompt": f"{mp:.0f}",
@@ -654,8 +673,8 @@ def analyze_all(raw_data_dir: str = "results/raw",
             })
 
             # Record into compact dict
-            compact_dict[m_name][f"{dataset_key}_acc"] = f"{acc*100:.1f}"
-            compact_dict[m_name][f"{dataset_key}_rev"] = f"{pct_rev:.1f}"
+            compact_dict[m_name][f"{dataset_key}_acc"] = fmt_pct(acc*100)
+            compact_dict[m_name][f"{dataset_key}_rev"] = fmt_pct(pct_rev)
             compact_dict[m_name][f"{dataset_key}_p_nev"] = format_p_val(p_nev) if m_name != "Never" else "--"
 
         t3_df = pd.DataFrame(t3_rows)
@@ -888,48 +907,54 @@ def analyze_all(raw_data_dir: str = "results/raw",
                 "Dataset": display_dataset(d_key),
                 "Gate": f"Gate S_{sig_name}",
                 "tau*": f"{t_star:.3f}",
-                "Test Acc (%)": f"{acc_cur*100:.1f}",
-                "% Rev": f"{pct_rev_cur:.1f}",
+                "Test Acc (%)": fmt_pct(acc_cur*100),
+                "% Rev": fmt_pct(pct_rev_cur),
                 "W->R": wr_cur,
                 "R->W": rw_cur,
                 "p vs Never": format_p_val(p_nev_cur),
                 "p vs Ungated MV": format_p_val(p_mv_ung_cur),
                 "Hindsight tau": f"{h_tau_cur:.3f}",
-                "Hindsight Acc (%)": f"{h_acc_cur*100:.1f}",
-                "Pred Acc (%)": f"{pred_acc_cur*100:.2f}",
-                "Obs Acc (%)": f"{acc_cur*100:.2f}",
-                "Diff (%)": f"{diff_cur*100:+.2f}"
+                "Hindsight Acc (%)": fmt_pct(h_acc_cur*100),
+                "Pred Acc (%)": fmt_pct(pred_acc_cur*100, 2),
+                "Obs Acc (%)": fmt_pct(acc_cur*100, 2),
+                "Diff (%)": fmt_pct(diff_cur*100, 2, sign=True)
             })
 
             table6_tex_rows.append({
                 "Dataset": display_dataset(d_key),
                 "Gate": f"Gate $S_{{\\text{{{sig_name}}}}}$",
                 "tau*": f"{t_star:.3f}",
-                "Test Acc": f"{acc_cur*100:.1f}\\%",
-                "Rev": f"{pct_rev_cur:.1f}\\%",
+                "Test Acc": f"{fmt_pct(acc_cur*100)}\\%",
+                "Rev": f"{fmt_pct(pct_rev_cur)}\\%",
                 "W->R": wr_cur,
                 "R->W": rw_cur,
                 "p_Never": format_p_val(p_nev_cur),
                 "p_UngatedMV": format_p_val(p_mv_ung_cur),
                 "Hindsight tau": f"{h_tau_cur:.3f}",
-                "Hindsight Acc": f"{h_acc_cur*100:.1f}\\%",
-                "Pred Acc": f"{pred_acc_cur*100:.2f}\\%",
-                "Obs Acc": f"{acc_cur*100:.2f}\\%",
-                "Diff": f"{diff_cur*100:+.2f}\\%"
+                "Hindsight Acc": f"{fmt_pct(h_acc_cur*100)}\\%",
+                "Pred Acc": f"{fmt_pct(pred_acc_cur*100, 2)}\\%",
+                "Obs Acc": f"{fmt_pct(acc_cur*100, 2)}\\%",
+                "Diff": f"{fmt_pct(diff_cur*100, 2, sign=True)}\\%"
             })
 
     if table6_csv_rows:
         t6_df = pd.DataFrame(table6_csv_rows)
         t6_df.to_csv(os.path.join(results_dir, "tables", "table6_mv_revision.csv"), index=False)
+        # Compact version used in the paper (Table 5); the full set of columns is in the CSV
+        def p_short(p_str: str) -> str:
+            p = float(p_str)
+            return "1.00" if p >= 0.999 else (f"{p:.2f}" if p >= 0.01 else p_str)
+
         with open(os.path.join(paper_dir, "tables", "table6_mv_revision.tex"), "w", encoding="utf-8") as f:
-            f.write("\\begin{table*}[t]\n")
-            f.write("\\caption{Evaluation of majority vote as a gated revision operator $R_{\\text{mv}}$ on GSM8K and HotpotQA (\\modelA{}, $N=400$ test questions). Thresholds $\\tau^*$ are selected on the development split. $p$-values are computed with two-sided exact McNemar tests against Never revising ($A_0$) and against ungated Majority Vote. Predicted accuracy is given by the analytical model $a + (1-a) f_{\\text{mv}} t - a b_{\\text{mv}} u$.}\n")
-            f.write("\\label{tab:mv}\n\\centering\n\\small\n")
-            f.write("\\begin{tabular}{llcccccccccccc}\n\\toprule\n")
-            f.write("Dataset & Gate & $\\tau^*$ & Acc (\\%) & Rev (\\%) & $W\\to R$ & $R\\to W$ & $p_{\\text{Never}}$ & $p_{\\text{MV}}$ & $\\tau_{\\text{hind}}$ & $\\text{Acc}_{\\text{hind}}$ & Pred (\\%) & Obs (\\%) & Diff (\\%) \\\\\n\\midrule\n")
-            for r in table6_tex_rows:
-                f.write(f"{r['Dataset']} & {r['Gate']} & {r['tau*']} & {r['Test Acc']} & {r['Rev']} & {r['W->R']} & {r['R->W']} & {r['p_Never']} & {r['p_UngatedMV']} & {r['Hindsight tau']} & {r['Hindsight Acc']} & {r['Pred Acc']} & {r['Obs Acc']} & {r['Diff']} \\\\\n")
-            f.write("\\bottomrule\n\\end{tabular}\n\\end{table*}\n")
+            f.write("\\begin{table}[t]\n")
+            f.write("\\caption{Majority vote as a gated revision operator $R_{\\text{mv}}$ on GSM8K and HotpotQA (\\modelA{}, test split). $\\tau^*$ tuned on development split. $p_{\\text{Never}}$ is two-sided exact McNemar test vs.\\ never revising. Predicted vs.\\ observed test accuracy from the analytical model.}\n")
+            f.write("\\label{tab:mv}\n\\centering\n\\small\n\\setlength{\\tabcolsep}{3.5pt}\n")
+            f.write("\\begin{tabular}{llcccccccc}\n\\toprule\n")
+            f.write("Dataset & Gate & $\\tau^*$ & Acc (\\%) & Rev (\\%) & $W\\to R$ & $R\\to W$ & $p_{\\text{Never}}$ & Pred (\\%) & Obs (\\%) \\\\\n\\midrule\n")
+            for r in table6_csv_rows:
+                gate = "Gate $S_{\\text{sc}}$" if r["Gate"].endswith("sc10") else "Gate $S_{\\text{avg}}$"
+                f.write(f"{r['Dataset']} & {gate} & {r['tau*']} & {r['Test Acc (%)']} & {r['% Rev']} & {r['W->R']} & {r['R->W']} & {p_short(r['p vs Never'])} & {r['Pred Acc (%)']} & {r['Obs Acc (%)']} \\\\\n")
+            f.write("\\bottomrule\n\\end{tabular}\n\\end{table}\n")
 
     # Save rw_cases.csv
     if rw_cases_all:
