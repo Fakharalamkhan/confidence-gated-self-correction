@@ -1,45 +1,40 @@
 # Knowing When to Revise: Confidence-Gated Self-Correction in Large Language Models
 
-This repository contains the complete experimental code, raw pipeline outputs, evaluation data, and LaTeX source files for the term paper on confidence-gated self-correction. We study whether training-free confidence gating (verbalized confidence, self-consistency agreement, and P(True) verification) can prevent accuracy degradation during intrinsic self-correction. Experiments evaluate Qwen2.5-7B-Instruct on grade-school mathematics (GSM8K) and multi-hop question answering (HotpotQA).
+Term paper, Advanced Topics in Computational Text and Media Sciences, University of Trier.
+Fakhr E Alam Khan, Matriculation No. 1818211.
 
-## Repository Overview
+## Idea
+LLMs often break correct answers when they "self-correct". This project tests whether the model
+should revise **only when it is unsure** about its first answer (confidence gating).
 
-- **`cgsc/`**: Core Python package for dataset loading, prompt construction, answer extraction, scoring (exact match, lenient, F1), sanity checks, and full evaluation analysis.
-- **`kaggle/`**: Kaggle execution notebooks and automation scripts for dual-T4 GPU inference using vLLM.
-- **`paper/`**: Complete LaTeX sources, section texts, tables, figures, bibliography (`references.bib`), and pre-submission validation script (`check_paper.py`).
-- **`results/`**: Raw evaluation runs (`results/raw/*.jsonl`), summary metrics (`summary.json`), transition logs (`rw_cases.csv`), sanity reports, environment metadata, and compiled LaTeX/CSV result tables and figures.
+## How it works
+1. The model (Qwen2.5-7B-Instruct) answers a question.
+2. A confidence score is computed: verbalised confidence, self-consistency (10 samples) or P(True).
+3. If the confidence is below a threshold, the answer is revised; otherwise it is kept.
 
-## Models and Datasets
+## What I did
+- Derived a simple analytical model of when gating can help, and how much.
+- Built the pipeline and ran it on GSM8K and HotpotQA (500 questions each, 100 dev / 400 test) on Kaggle GPUs.
+- Compared the three signals against never / always revising, IoE, majority voting and an oracle gate.
+- Tested the analytical model's predictions against the measured results.
 
-- **Model**: `Qwen/Qwen2.5-7B-Instruct` (served via vLLM with tensor parallelism across 2x NVIDIA T4 GPUs in 16-bit precision).
-- **Datasets**:
-  - **GSM8K** (`main`, test set split): 500 questions (100 dev / 400 test, seed 42).
-  - **HotpotQA** (`distractor`, validation set split): 500 questions (100 dev / 400 test, seed 42).
+## Result
+Self-critique almost never fixes a wrong answer, so no gate beats never revising. Self-consistency spots
+wrong answers well (AUROC 0.95 on GSM8K), and used as the revision step it does fix errors, matching the
+model's prediction. **The bottleneck is the revision step, not the decision of when to revise.**
 
-Llama-3.1-8B-Instruct was planned but not run; its code paths remain but are unused.
+## Repository
+| Folder | Contents |
+|---|---|
+| `paper/` | LaTeX sources and final PDF |
+| `cgsc/` | Code: data, prompts, scoring, pipeline, analysis |
+| `kaggle/` | Kaggle notebook used for inference (2× T4, vLLM) |
+| `results/` | Raw outputs, summary, tables and figures |
 
-## Reproduction
+## Reproduce
+1. Run `kaggle/cgsc_run.ipynb` on Kaggle (2× T4 GPUs) and copy the two `.jsonl` outputs to `results/raw/`.
+2. Run `python cgsc/analyze.py` to regenerate all tables and figures.
+3. Build the paper: `cd paper && pdflatex main && bibtex main && pdflatex main && pdflatex main`.
 
-**How the reported results were produced.** The results in `results/raw/` came from two runs. The first run executed the full pipeline, but a seeding bug made all ten self-consistency samples identical. We then re-ran only the self-consistency samples on top of the first run's outputs (`python cgsc/run.py ... --resample_sc_only`), which recomputes $S_{\text{sc5}}$, $S_{\text{sc10}}$ and majority voting; everything else ($A_0$, $S_{\text{verb}}$, $S_{\text{verif}}$, $A_1$, IoE) comes from the first run. With the fixed code, running the notebook with its default settings reproduces all results in a single pass.
-
-1. **Inference Pipeline**:
-   - Run `kaggle/cgsc_run.ipynb` on a Kaggle notebook with 2x NVIDIA T4 GPUs and internet access. The default settings (`SETTINGS = ["qwen/gsm8k", "qwen/hotpotqa"]`) run the full pipeline for both datasets.
-   - The notebook installs `vllm==0.6.6.post1`, runs the initial answer generation ($A_0$), the three confidence signals ($S_{\text{verb}}$, $S_{\text{sc10}}$, $S_{\text{verif}}$), revision ($A_1$), IoE baseline, and majority voting, and writes `qwen_gsm8k.jsonl` and `qwen_hotpotqa.jsonl`. Copy them to `results/raw/`.
-   - The notebook is generated from `kaggle/build_notebook.py` (`python kaggle/build_notebook.py`).
-
-2. **Analysis and Table Generation**:
-   - Compute all metrics, transition matrices, bootstrap AUROCs, cost models, LaTeX tables and figures from `results/raw/`:
-     ```bash
-     python cgsc/analyze.py
-     ```
-
-3. **Paper Build and Validation**:
-   - Compile the paper and verify pre-submission criteria (page limits, reference counts, formatting):
-     ```bash
-     cd paper
-     pdflatex main.tex
-     bibtex main
-     pdflatex main.tex
-     pdflatex main.tex
-     python check_paper.py
-     ```
+Note: the reported results come from a full run plus a re-run of only the self-consistency samples,
+because a seeding bug made the first samples identical. With the fixed code, one notebook run reproduces everything.
