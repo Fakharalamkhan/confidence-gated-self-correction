@@ -14,6 +14,7 @@
 \pgfplotsset{compat=1.16}
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage{url}
+\usepackage{pdfpages}
 \usepackage{listings}
 \lstset{%
   basicstyle=\small\ttfamily,
@@ -65,9 +66,15 @@
 \input{sections/09_conclusion}
 \bibliographystyle{unsrtnat}
 \bibliography{references}
+\raggedbottom
 \appendix
 \input{appendix/A_prompts}
 \input{appendix/B_implementation}
 \input{appendix/C_contribution}
 \input{appendix/D_full_results}
+% Declaration of Academic Integrity: the signed form (git-ignored) if present, else the pre-filled one
+\clearpage
+\IfFileExists{declaration/declaration_signed.pdf}
+  {\includepdf[pages=-]{declaration/declaration_signed.pdf}}
+  {\includepdf[pages=-]{declaration/declaration_prefilled.pdf}}
 \end{document}

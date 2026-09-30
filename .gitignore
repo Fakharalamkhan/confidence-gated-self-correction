@@ -20,3 +20,6 @@ __pycache__/
 scratch_*.py
 scan_secrets.py
 STATUS.md
+
+# Signed declaration: personal, never commit
+paper/declaration/declaration_signed.pdf
